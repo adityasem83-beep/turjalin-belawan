@@ -10,17 +10,50 @@ st.title("🚨 TURJALIN - POLRES PELABUHAN BELAWAN")
 st.subheader("Sistem Pemetaan Laka Lantas & Ploting Personel Turjakwali")
 
 # Upload Data Master Laka Lantas
-st.sidebar.header("📁 Upload Data Master")
-uploaded_file = st.sidebar.file_uploader("Pilih File Excel/CSV", type=["csv", "xlsx"])
+uploaded_file = st.sidebar.file_uploader(
+    "Pilih File Excel/CSV", type=["xlsx", "xls", "csv"]
+)
 
 if uploaded_file is not None:
-    try:
-        if uploaded_file.name.endswith('.csv'):
-            df = pd.read_csv(uploaded_file)
-        else:
-            df = pd.read_excel(uploaded_file)
-            
-        st.sidebar.success("Data Master berhasil dimuat!")
+  try:
+    if uploaded_file.name.endswith(".csv"):
+      df = pd.read_csv(uploaded_file)
+    else:
+      df = pd.read_excel(uploaded_file)
+
+    st.sidebar.success("Data Master berhasil dimuat!")
+
+    # Deteksi otomatis nama kolom Koordinat (Latitude & Longitude)
+    lat_col = next(
+        (
+            c
+            for c in df.columns
+            if c.strip().upper() in ["LATITUDE", "LATTITUDE", "LAT"]
+        ),
+        None,
+    )
+    lon_col = next(
+        (
+            c
+            for c in df.columns
+            if c.strip().upper() in ["LONGITUDE", "LONG", "LON"]
+        ),
+        None,
+    )
+
+    if lat_col and lon_col:
+      df["LATITUDE"] = pd.to_numeric(df[lat_col], errors="coerce")
+      df["LONGITUDE"] = pd.to_numeric(df[lon_col], errors="coerce")
+      df_valid = df.dropna(subset=["LATITUDE", "LONGITUDE"])
+    else:
+      st.error(
+          "Kolom Latitude/Longitude tidak ditemukan! Periksa kembali nama"
+          " kolom di file Excel Anda."
+      )
+
+  except Exception as e:
+    st.error(f"Kesalahan memproses data: {e}")
+
         
         # Validasi Kolom Koordinat
         # Deteksi otomatis nama kolom Koordinat (Latitude & Longitude)
