@@ -23,9 +23,33 @@ if uploaded_file is not None:
         st.sidebar.success("Data Master berhasil dimuat!")
         
         # Validasi Kolom Koordinat
-        df['LATTITUDE'] = pd.to_numeric(df['LATTITUDE'], errors='coerce')
-        df['LONGITUDE'] = pd.to_numeric(df['LONGITUDE'], errors='coerce')
-        df_valid = df.dropna(subset=['LATTITUDE', 'LONGITUDE'])
+        # Deteksi otomatis nama kolom Koordinat (Latitude & Longitude)
+lat_col = next(
+    (
+        c
+        for c in df.columns
+        if c.strip().upper() in ['LATITUDE', 'LATTITUDE', 'LAT']
+    ),
+    None,
+)
+lon_col = next(
+    (
+        c
+        for c in df.columns
+        if c.strip().upper() in ['LONGITUDE', 'LONG', 'LON']
+    ),
+    None,
+)
+
+if lat_col and lon_col:
+  df['LATITUDE'] = pd.to_numeric(df[lat_col], errors='coerce')
+  df['LONGITUDE'] = pd.to_numeric(df[lon_col], errors='coerce')
+  df_valid = df.dropna(subset=['LATITUDE', 'LONGITUDE'])
+else:
+  st.error(
+      'Kolom Latitude/Longitude tidak ditemukan! Periksa kembali nama kolom di'
+      ' file Excel Anda.'
+  )
 
         # Filter Operasional
         st.sidebar.header("🔍 Filter Wilayah & Kejadian")
